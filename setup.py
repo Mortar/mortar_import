@@ -1,0 +1,26 @@
+# Copyright (c) 2015 Chris Withers
+# See README.md for license details.
+
+import os
+from setuptools import setup, find_packages
+
+base_dir = os.path.dirname(__file__)
+
+setup(
+    name='mortar_import',
+    author='Chris Withers',
+    version='1.0',
+    author_email='chris@withers.org',
+    license='MIT',
+    description="Tools for importing data, particularly when using mortar_mixins",
+    long_description=open(os.path.join(base_dir, 'README.rst')).read(),
+    url='https://github.com/Mortar/mortar_import',
+    packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
+    extras_require=dict(
+        test=['nose', 'nose-cov','testfixtures', 'coveralls', 'mortar_rdb'],
+        build=['setuptools-git', 'wheel', 'twine']
+        ),
+    )
+
