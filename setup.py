@@ -19,7 +19,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     extras_require=dict(
-        test=['nose', 'nose-cov','testfixtures', 'coveralls', 'mortar_rdb'],
+        test=['nose', 'nose-cov','testfixtures', 'coveralls', 'mortar_mixins'],
         build=['setuptools-git', 'wheel', 'twine']
         ),
     )
