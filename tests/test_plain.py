@@ -1,5 +1,7 @@
+from collections import namedtuple
 from mock import Mock, call
 from unittest import TestCase
+from mortar_import.extractors import DictExtractor, NamedTupleExtractor
 from testfixtures import compare, ShouldRaise
 from mortar_import.diff import Diff
 
@@ -63,3 +65,90 @@ class TestPlain(TestCase):
                          "first was ('a', 2) from ('a', 1, 2), "
                          "next was ('a', 4) from ('a', 3, 4)")):
             diff.apply()
+
+    def test_dict(self):
+        mock = Mock()
+
+        class DiffTuple(Diff):
+
+            extract_imported = extract_existing = DictExtractor('k')
+
+            add = mock.add
+            update = mock.update
+            delete = mock.delete
+
+        a = dict(k='a', v=1)
+        b = dict(k='b', v=2)
+        c = dict(k='c', v=3)
+        c_ = dict(k='c', v=4)
+        d = dict(k='d', v=5)
+
+        diff = DiffTuple([a, b, c], [b, c_, d])
+        diff.apply()
+
+        compare([
+            call.add('d', d, d),
+            call.update('c', c, c, c_, c_),
+            call.delete('a', a, a),
+        ], mock.mock_calls)
+
+    def test_dict_multi_key(self):
+        mock = Mock()
+
+        class DiffTuple(Diff):
+
+            extract_imported = extract_existing = DictExtractor('k', 'k2')
+
+            add = mock.add
+            update = mock.update
+            delete = mock.delete
+
+        a = dict(k='a', k2=0, v=1)
+        b = dict(k='b', k2=0, v=2)
+        c = dict(k='c', k2=0, v=3)
+        c_ = dict(k='c', k2=0, v=4)
+        d = dict(k='d', k2=0, v=5)
+
+        diff = DiffTuple([a, b, c], [b, c_, d])
+        diff.apply()
+
+        compare([
+            call.add(('d', 0), d, d),
+            call.update(('c', 0), c, c, c_, c_),
+            call.delete(('a', 0), a, a),
+        ], mock.mock_calls)
+
+    def test_named_tuple(self):
+        mock = Mock()
+
+        X = namedtuple('X', 'foo bar')
+        Y = namedtuple('Y', 'foo bar')
+
+        class DiffTuple(Diff):
+
+            extract_imported = extract_existing = NamedTupleExtractor('foo')
+
+            add = mock.add
+            update = mock.update
+            delete = mock.delete
+
+        aX = X('a', 1)
+        bX = X('b', 2)
+        cX = X('c', 3)
+        bY = Y('b', 2)
+        cY = Y('c', 4)
+        dY = Y('d', 5)
+
+        daX = dict(foo='a', bar=1)
+        dcX = dict(foo='c', bar=3)
+        dcY = dict(foo='c', bar=4)
+        ddY = dict(foo='d', bar=5)
+
+        diff = DiffTuple([aX, bX, cX], [bY, cY, dY])
+        diff.apply()
+
+        compare([
+            call.add(('d', ), dY, ddY),
+            call.update(('c',), cX, dcX, cY, dcY),
+            call.delete(('a',), aX, daX),
+        ], mock.mock_calls)
