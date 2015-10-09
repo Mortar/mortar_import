@@ -1,9 +1,8 @@
 from abc import ABCMeta, abstractmethod
+from six import with_metaclass
 
 
-class Diff(object):
-
-    __metaclass__ = ABCMeta
+class Diff(with_metaclass(ABCMeta, object)):
 
     def __init__(self, existing, imported):
         self.existing = existing

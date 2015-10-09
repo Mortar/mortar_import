@@ -8,6 +8,13 @@ from mortar_import.diff import Diff
 
 class TestPlain(TestCase):
 
+    def test_abstract(self):
+        with ShouldRaise(TypeError(
+                "Can't instantiate abstract class Diff with abstract methods "
+                "add, delete, extract_existing, extract_imported, update"
+        )):
+            Diff([], [])
+
     def make_differ(self):
         mock = Mock()
 
