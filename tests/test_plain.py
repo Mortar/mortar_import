@@ -49,6 +49,26 @@ class TestPlain(TestCase):
             call.delete('a', ('a', 1, 2), ('a', 2)),
         ], mock.mock_calls)
 
+    def test_compute(self):
+
+        DiffTuple, mock = self.make_differ()
+
+        diff = DiffTuple(
+            [('a', 1, 2), ('b', 3, 4), ('c', 5, 6)],
+            [('b', 3, 4), ('c', 5, 7), ('d', 7, 8)]
+        )
+
+        diff.compute()
+
+        compare([('d', ('d', 7, 8), ('d', 8))],
+                diff.to_add)
+        compare([('c', ('c', 5, 6), ('c', 6), ('c', 5, 7), ('c', 7))],
+                diff.to_update)
+        compare([('a', ('a', 1, 2), ('a', 2))],
+                diff.to_delete)
+
+        compare([], mock.mock_calls)
+
     def test_duplicate_existing_key(self):
 
         DiffTuple, mock = self.make_differ()

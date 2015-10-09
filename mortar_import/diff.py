@@ -1,8 +1,16 @@
 from abc import ABCMeta, abstractmethod
+from collections import namedtuple
 from six import with_metaclass
 
+Addition = namedtuple('Addition', 'key imported extracted_imported')
+Update = namedtuple('Update', 'key '
+                              'existing existing_extracted '
+                              'imported imported_extracted')
+Deletion = namedtuple('Deletion', 'key existing existing_imported')
 
 class Diff(with_metaclass(ABCMeta, object)):
+
+    to_add = to_update = to_delete = None
 
     def __init__(self, existing, imported):
         self.existing = existing
@@ -45,7 +53,7 @@ class Diff(with_metaclass(ABCMeta, object)):
         Handle the deletion of an existing object.
         """
 
-    def apply(self):
+    def compute(self):
         for name in 'existing', 'imported':
             mapping = {}
             sequence = getattr(self, name)
@@ -68,16 +76,29 @@ class Diff(with_metaclass(ABCMeta, object)):
             setattr(self, name+'_mapping', mapping)
             setattr(self, name+'_keys', set(mapping))
 
+        self.to_add = []
+        self.to_update = []
+        self.to_delete = []
+
         for key in sorted(self.imported_keys - self.existing_keys):
-            self.add(key, *self.imported_mapping[key])
+            self.to_add.append(Addition(key, *self.imported_mapping[key]))
 
         for key in sorted(self.imported_keys & self.existing_keys):
             existing, existing_extracted = self.existing_mapping[key]
             imported, imported_extracted = self.imported_mapping[key]
             if existing_extracted != imported_extracted:
-                self.update(key,
-                            existing, existing_extracted,
-                            imported, imported_extracted)
+                self.to_update.append(Update(key,
+                                             existing, existing_extracted,
+                                             imported, imported_extracted))
 
         for key in sorted(self.existing_keys - self.imported_keys):
-            self.delete(key, *self.existing_mapping[key])
+            self.to_delete.append(Deletion(key, *self.existing_mapping[key]))
+
+    def apply(self):
+        if self.to_add is None:
+            self.compute()
+        for op in 'add', 'update', 'delete':
+            meth = getattr(self, op)
+            for action in  getattr(self, 'to_'+op):
+                meth(*action)
+
