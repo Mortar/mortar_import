@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from mortar_import.extractors import MultiKeyDictExtractor
 from mortar_import.sqlalchemy import SQLAlchemyDiff
-from mortar_mixins import Common
 from mortar_rdb import get_session
 from mortar_rdb.testing import register_session
 from sqlalchemy import Column, Integer
@@ -23,12 +22,7 @@ class MultiPK(Base):
     __tablename__ = 'multi_pk'
     name = Column(String, primary_key=True)
     index = Column(Integer, primary_key=True)
-    value = Column(String)
-
-
-class CommonMixedIn(Common, Base):
-    key = Column(String, primary_key=True)
-    value = Column(String)
+    value = Column(Integer)
 
 
 class TestSQLAlchemy(TestCase):
@@ -79,5 +73,44 @@ class TestSQLAlchemy(TestCase):
 
         actual = [dict(key=o.key, value=o.value)
                   for o in self.session.query(Simple).order_by('key')]
+
+        compare(expected, actual)
+
+    def test_multi_column_primary_key(self):
+        self.session.add(MultiPK(name='a', index=0, value=1))
+        self.session.add(MultiPK(name='b', index=0, value=2))
+        self.session.add(MultiPK(name='b', index=1, value=-2))
+        self.session.add(MultiPK(name='c', index=0, value=3))
+
+        imported = [
+            dict(name='b', index=0, value=2),
+            dict(name='b', index=2, value=-1),
+            dict(name='c', index=0, value=4),
+            dict(name='d', index=0, value=5),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+
+            def __init__(self, session, imported):
+                existing = session.query(MultiPK)
+                super(TestDiff, self).__init__(
+                    session, MultiPK, existing, imported
+                )
+
+            extract_imported = MultiKeyDictExtractor('name', 'index')
+
+        diff = TestDiff(self.session, imported)
+
+        diff.apply()
+
+        expected = [
+            dict(name='b', index=0, value=2),
+            dict(name='b', index=2, value=-1),
+            dict(name='c', index=0, value=4),
+            dict(name='d', index=0, value=5),
+        ]
+
+        actual = [dict(name=o.name, index=o.index, value=o.value)
+                  for o in self.session.query(MultiPK).order_by('name')]
 
         compare(expected, actual)
