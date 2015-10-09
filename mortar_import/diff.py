@@ -8,6 +8,7 @@ Update = namedtuple('Update', 'key '
                               'imported imported_extracted')
 Deletion = namedtuple('Deletion', 'key existing existing_imported')
 
+
 class Diff(with_metaclass(ABCMeta, object)):
 
     to_add = to_update = to_delete = None
