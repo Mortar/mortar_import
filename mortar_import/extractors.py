@@ -9,7 +9,7 @@ class SingleKeyDictExtractor(object):
 
 class MultiKeyDictExtractor(object):
 
-    def __init__(self, keys):
+    def __init__(self, *keys):
         self.keys = keys
 
     def __call__(self, obj):
@@ -20,7 +20,7 @@ def DictExtractor(*keys):
     if len(keys) == 1:
         return SingleKeyDictExtractor(keys[0])
     else:
-        return MultiKeyDictExtractor(keys)
+        return MultiKeyDictExtractor(*keys)
 
 
 class NamedTupleExtractor(object):
