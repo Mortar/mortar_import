@@ -2,17 +2,26 @@ from __future__ import absolute_import
 # import orm here so that event registration work
 import sqlalchemy.orm
 
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 from mortar_import.diff import Diff
 from sqlalchemy import inspect
 
+# placeholder for all objects of a type
 
 class SQLAlchemyDiff(Diff):
 
-    def __init__(self, session, model, existing, imported):
-        super(SQLAlchemyDiff, self).__init__(existing, imported)
-        self.model = model
+    def __init__(self, session, imported):
         self.session = session
+        super(SQLAlchemyDiff, self).__init__(self.existing(), imported)
+
+    @abstractproperty
+    def model(self):
+        """
+        The model that will be used to source existing objects.
+        """
+
+    def existing(self):
+        return self.session.query(self.model)
 
     def extract_existing(self, obj):
         i = inspect(obj)

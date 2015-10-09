@@ -36,7 +36,7 @@ class TestSQLAlchemy(TestCase):
     def test_abstract(self):
         with ShouldRaise(TypeError(
                 "Can't instantiate abstract class SQLAlchemyDiff with "
-                "abstract methods extract_imported"
+                "abstract methods extract_imported, model"
         )):
             SQLAlchemyDiff([], [])
 
@@ -52,13 +52,7 @@ class TestSQLAlchemy(TestCase):
         ]
 
         class TestDiff(SQLAlchemyDiff):
-
-            def __init__(self, session, imported):
-                existing = session.query(Simple)
-                super(TestDiff, self).__init__(
-                    session, Simple, existing, imported
-                )
-
+            model = Simple
             extract_imported = MultiKeyDictExtractor('key')
 
         diff = TestDiff(self.session, imported)
@@ -90,13 +84,7 @@ class TestSQLAlchemy(TestCase):
         ]
 
         class TestDiff(SQLAlchemyDiff):
-
-            def __init__(self, session, imported):
-                existing = session.query(MultiPK)
-                super(TestDiff, self).__init__(
-                    session, MultiPK, existing, imported
-                )
-
+            model = MultiPK
             extract_imported = MultiKeyDictExtractor('name', 'index')
 
         diff = TestDiff(self.session, imported)
@@ -131,13 +119,11 @@ class TestSQLAlchemy(TestCase):
 
         class TestDiff(SQLAlchemyDiff):
 
-            def __init__(self, session, imported):
-                existing = session.query(MultiPK).filter_by(index=0)
-                super(TestDiff, self).__init__(
-                    session, MultiPK, existing, imported
-                )
-
+            model = MultiPK
             extract_imported = MultiKeyDictExtractor('name')
+
+            def existing(self):
+                return self.session.query(MultiPK).filter_by(index=0)
 
         diff = TestDiff(self.session, imported)
 
