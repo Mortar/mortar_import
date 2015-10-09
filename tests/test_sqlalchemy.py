@@ -114,3 +114,47 @@ class TestSQLAlchemy(TestCase):
                   for o in self.session.query(MultiPK).order_by('name')]
 
         compare(expected, actual)
+
+    def test_partial_table_contents(self):
+        self.session.add(MultiPK(name='a', index=0, value=1))
+        self.session.add(MultiPK(name='b', index=0, value=2))
+        self.session.add(MultiPK(name='c', index=0, value=3))
+        self.session.add(MultiPK(name='a', index=1, value=4))
+        self.session.add(MultiPK(name='b', index=1, value=5))
+        self.session.add(MultiPK(name='c', index=1, value=6))
+
+        imported = [
+            dict(name='b', index=0, value=2),
+            dict(name='c', index=0, value=7),
+            dict(name='d', index=0, value=8),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+
+            def __init__(self, session, imported):
+                existing = session.query(MultiPK).filter_by(index=0)
+                super(TestDiff, self).__init__(
+                    session, MultiPK, existing, imported
+                )
+
+            extract_imported = MultiKeyDictExtractor('name')
+
+        diff = TestDiff(self.session, imported)
+
+        diff.apply()
+
+        expected = [
+            dict(name='b', index=0, value=2),
+            dict(name='c', index=0, value=7),
+            dict(name='d', index=0, value=8),
+            dict(name='a', index=1, value=4),
+            dict(name='b', index=1, value=5),
+            dict(name='c', index=1, value=6),
+        ]
+
+        actual = [
+            dict(name=o.name, index=o.index, value=o.value)
+            for o in self.session.query(MultiPK).order_by('index', 'name')
+        ]
+
+        compare(expected, actual)
