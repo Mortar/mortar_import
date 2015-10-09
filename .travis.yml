@@ -28,7 +28,7 @@ deploy:
   provider: pypi
   user: chrisw
   password:
-    secure:
+    secure: XB+FUbJg9Qopibh24FcU3nCw3v2e8PFxrHF2pmj6Rbp2EgZ9Jh2JTx3UYFaM0wl3OL6wF8GMTIxgJgoOfPSAlWbT/HBQZWyqN+ATumcuVVZkzbcvcM75i0IYep4OWaF4rRiNQ3tyCYNVZ75rvEYZEHH1F1SaUtmgjHJyI2D8UgrBjlxwHb0TWpEjp9D1Z2uIdTMV8FJ47/iFnIKjtuLH4DwcjHRZDFIHkvelKPRX5y+nRcuSAKykg+9bERnExrzuR8bgUGdjsR1iP0SiMDdHHVDObTrdC+6xX4NLmKX71YpyurAyWhM3JmgXZGxulyRyjH1HtZNRojKaMEsbHJEPAXjWOHu9ITBLIbXCjuh/NjF6oXHobgrg3P91+L4wMRkTccpNTjzYlZOxcp+tbs8nhDqdk4bbBCZynVOOcPjQS089VIwX63poQbLItH+NATcg8A8bR0nQLXoHvJ2iQSbNOPvzwoyAkEdey+qZ4OLueODiaGQJdWT4bAAT+yqf7iN6EH6+rj1Ls+7vd9acc9te4P7d+349xM7BfEGYzPPOxXtcZyyrTUXHvG2b7uqxWJnbJu6Bg1jtm/zM41ohmzMvOjLqub2Xea7QLhLa0vZW3vMOMP6J8QzGc/y/w+1pJxMbELtsZfxTtAZWKwoiKVLFq/MjofHZ0SkDsnkJ3xOruNY=
   on:
     tags: true
     repo: Mortar/mortar_import

@@ -9,7 +9,7 @@ base_dir = os.path.dirname(__file__)
 setup(
     name='mortar_import',
     author='Chris Withers',
-    version='1.0',
+    version='0.5',
     author_email='chris@withers.org',
     license='MIT',
     description="Tools for importing data, particularly when using mortar_mixins",
