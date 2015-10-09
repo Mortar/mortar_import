@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # import orm here so that event registration work
 import sqlalchemy.orm
 
