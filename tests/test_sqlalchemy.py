@@ -6,6 +6,7 @@ from mortar_rdb import get_session
 from mortar_rdb.testing import register_session
 from sqlalchemy import Column, Integer
 from sqlalchemy import String
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from testfixtures import ShouldRaise, compare
 
@@ -15,7 +16,7 @@ Base = declarative_base()
 class Simple(Base):
     __tablename__ = 'simple'
     key = Column(String, primary_key=True)
-    value = Column(Integer)
+    value = Column(Integer, unique=True)
 
 
 class MultiPK(Base):
@@ -63,6 +64,53 @@ class TestSQLAlchemy(TestCase):
             dict(key='b', value=2),
             dict(key='c', value=4),
             dict(key='d', value=5),
+        ]
+
+        actual = [dict(key=o.key, value=o.value)
+                  for o in self.session.query(Simple).order_by('key')]
+
+        compare(expected, actual)
+
+    def test_order_matters_no_type_flush(self):
+        self.session.add(Simple(key='a', value=2))
+        self.session.add(Simple(key='b', value=1))
+
+        imported = [
+            dict(key='b', value=2),
+            dict(key='d', value=1),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+            model = Simple
+            extract_imported = MultiKeyDictExtractor('key')
+            flush_per_type = False
+
+        diff = TestDiff(self.session, imported)
+        diff.apply()
+
+        with ShouldRaise(IntegrityError):
+            self.session.flush()
+
+    def test_order_matters_type_flush(self):
+        self.session.add(Simple(key='a', value=2))
+        self.session.add(Simple(key='b', value=1))
+
+        imported = [
+            dict(key='b', value=2),
+            dict(key='d', value=1),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+            model = Simple
+            extract_imported = MultiKeyDictExtractor('key')
+
+        diff = TestDiff(self.session, imported)
+
+        diff.apply()
+
+        expected = [
+            dict(key='b', value=2),
+            dict(key='d', value=1),
         ]
 
         actual = [dict(key=o.key, value=o.value)

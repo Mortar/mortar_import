@@ -49,6 +49,44 @@ class TestPlain(TestCase):
             call.add('d', ('d', 7, 8), ('d', 8)),
         ], mock.mock_calls)
 
+    def test_post_actions(self):
+
+        mock = Mock()
+
+        class DiffTuple(Diff):
+            def extract_existing(self, obj):
+                return obj[0], obj
+
+            extract_imported = extract_existing
+
+            add = mock.add
+            update = mock.update
+            delete = mock.delete
+            post_add = mock.post_add
+            post_update = mock.post_update
+            post_delete = mock.post_delete
+
+        diff = DiffTuple(
+            [('a1', 2), ('a2', 2),  ('c1', 6),  ('c2', 6)],
+            [('c1', 7), ('c2', 7), ('d1', 8), ('d2', 8)]
+        )
+
+        compare([], mock.mock_calls)
+
+        diff.apply()
+
+        compare([
+            call.delete('a1', ('a1', 2), ('a1', 2)),
+            call.delete('a2', ('a2', 2), ('a2', 2)),
+            call.post_delete(),
+            call.update('c1', ('c1', 6), ('c1', 6), ('c1', 7), ('c1', 7)),
+            call.update('c2', ('c2', 6), ('c2', 6), ('c2', 7), ('c2', 7)),
+            call.post_update(),
+            call.add('d1', ('d1', 8), ('d1', 8)),
+            call.add('d2', ('d2', 8), ('d2', 8)),
+            call.post_add(),
+        ], mock.mock_calls)
+
     def test_compute(self):
 
         DiffTuple, mock = self.make_differ()

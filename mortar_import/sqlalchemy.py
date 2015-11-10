@@ -6,9 +6,9 @@ from abc import abstractmethod, abstractproperty
 from mortar_import.diff import Diff
 from sqlalchemy import inspect
 
-# placeholder for all objects of a type
-
 class SQLAlchemyDiff(Diff):
+
+    flush_per_type = True
 
     def __init__(self, session, imported):
         self.session = session
@@ -49,3 +49,9 @@ class SQLAlchemyDiff(Diff):
 
     def delete(self, key, existing, existing_extracted):
         self.session.delete(existing)
+
+    def per_type_flush(self):
+        if self.flush_per_type:
+            self.session.flush()
+
+    post_add = post_update = post_delete = per_type_flush

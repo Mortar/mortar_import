@@ -13,6 +13,8 @@ class Diff(with_metaclass(ABCMeta, object)):
 
     to_add = to_update = to_delete = None
 
+    post_add = post_update = post_delete = None
+
     def __init__(self, existing, imported):
         self.existing = existing
         self.imported = imported
@@ -98,8 +100,11 @@ class Diff(with_metaclass(ABCMeta, object)):
     def apply(self):
         if self.to_add is None:
             self.compute()
-        for op in 'delete', 'update', 'add' :
+        for op in 'delete', 'update', 'add':
             meth = getattr(self, op)
             for action in  getattr(self, 'to_'+op):
                 meth(*action)
+            post = getattr(self, 'post_'+op)
+            if post is not None:
+                post()
 
