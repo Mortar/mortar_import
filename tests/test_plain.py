@@ -44,9 +44,9 @@ class TestPlain(TestCase):
         diff.apply()
 
         compare([
-            call.add('d', ('d', 7, 8), ('d', 8)),
-            call.update('c', ('c', 5, 6), ('c', 6), ('c', 5, 7), ('c', 7)),
             call.delete('a', ('a', 1, 2), ('a', 2)),
+            call.update('c', ('c', 5, 6), ('c', 6), ('c', 5, 7), ('c', 7)),
+            call.add('d', ('d', 7, 8), ('d', 8)),
         ], mock.mock_calls)
 
     def test_compute(self):
@@ -114,9 +114,9 @@ class TestPlain(TestCase):
         diff.apply()
 
         compare([
-            call.add('d', d, d),
-            call.update('c', c, c, c_, c_),
             call.delete('a', a, a),
+            call.update('c', c, c, c_, c_),
+            call.add('d', d, d),
         ], mock.mock_calls)
 
     def test_dict_multi_key(self):
@@ -140,9 +140,9 @@ class TestPlain(TestCase):
         diff.apply()
 
         compare([
-            call.add(('d', 0), d, d),
-            call.update(('c', 0), c, c, c_, c_),
             call.delete(('a', 0), a, a),
+            call.update(('c', 0), c, c, c_, c_),
+            call.add(('d', 0), d, d),
         ], mock.mock_calls)
 
     def test_named_tuple(self):
@@ -175,7 +175,7 @@ class TestPlain(TestCase):
         diff.apply()
 
         compare([
-            call.add(('d', ), dY, ddY),
-            call.update(('c',), cX, dcX, cY, dcY),
             call.delete(('a',), aX, daX),
+            call.update(('c',), cX, dcX, cY, dcY),
+            call.add(('d', ), dY, ddY),
         ], mock.mock_calls)

@@ -98,7 +98,7 @@ class Diff(with_metaclass(ABCMeta, object)):
     def apply(self):
         if self.to_add is None:
             self.compute()
-        for op in 'add', 'update', 'delete':
+        for op in 'delete', 'update', 'add' :
             meth = getattr(self, op)
             for action in  getattr(self, 'to_'+op):
                 meth(*action)
