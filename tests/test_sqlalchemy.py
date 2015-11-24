@@ -26,6 +26,12 @@ class MultiPK(Base):
     value = Column(Integer)
 
 
+class AutoPK(Base):
+    __tablename__ = 'auto_pk'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    value = Column(Integer)
+
 class TestSQLAlchemy(TestCase):
 
     def setUp(self):
@@ -189,6 +195,44 @@ class TestSQLAlchemy(TestCase):
         actual = [
             dict(name=o.name, index=o.index, value=o.value)
             for o in self.session.query(MultiPK).order_by('index', 'name')
+        ]
+
+        compare(expected, actual)
+
+    def test_auto_id(self):
+        self.session.add(MultiPK(name='a', value=1))
+        self.session.add(MultiPK(name='b', value=2))
+        self.session.add(MultiPK(name='c', value=3))
+
+        imported = [
+            dict(name='b', value=2),
+            dict(name='c', value=4),
+            dict(name='d', value=5),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+
+            model = AutoPK
+            extract_imported = MultiKeyDictExtractor('name', 'value')
+
+            def extract_existing(self, obj):
+                _, extracted = super(TestDiff, self).extract_existing(obj)
+                key = (extracted['name'], extracted['value'])
+                return key, extracted
+
+        diff = TestDiff(self.session, imported)
+
+        diff.apply()
+
+        expected = [
+            dict(name='b', value=2),
+            dict(name='c', value=4),
+            dict(name='d', value=5),
+        ]
+
+        actual = [
+            dict(name=o.name, value=o.value)
+            for o in self.session.query(AutoPK).order_by('name', 'value')
         ]
 
         compare(expected, actual)
