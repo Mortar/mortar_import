@@ -30,9 +30,11 @@ class Diff(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def extract_imported(self, obj):
         """
-        Must return ``key, obj`` where ``key`` is the key of the imported
-        object and ``obj`` is an object that can be compared with
+        Must return ``None`` or ``key, obj`` where ``key`` is the key of the
+        imported object and ``obj`` is an object that can be compared with
         existing objects.
+
+        If ``None``, then that object will be ignored.
         """
 
     @abstractmethod
@@ -62,7 +64,10 @@ class Diff(with_metaclass(ABCMeta, object)):
             sequence = getattr(self, name)
             extract = getattr(self, 'extract_'+name)
             for raw in sequence:
-                key, extracted = extract(raw)
+                extracted = extract(raw)
+                if extracted is None:
+                    continue
+                key, extracted = extracted
                 if key in mapping:
                     existing_raw, existing_extracted = mapping[key]
                     raise KeyError(

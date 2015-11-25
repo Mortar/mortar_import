@@ -131,6 +131,30 @@ class TestPlain(TestCase):
                          "next was ('a', 4) from ('a', 3, 4)")):
             diff.apply()
 
+    def test_skip(self):
+        mock = Mock()
+
+        class DiffTuple(Diff):
+
+            extract_existing = DictExtractor('k')
+            def extract_imported(self, obj):
+                if obj[-1] == 4:
+                    return
+                return obj[0], (obj[0], obj[-1])
+
+            add = mock.add
+            update = mock.update
+            delete = mock.delete
+
+        diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
+        diff.apply()
+
+
+        compare([
+            call.add('a', ('a', 1, 2), ('a', 2)),
+        ], mock.mock_calls)
+
+
     def test_dict(self):
         mock = Mock()
 
