@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from six import with_metaclass
 
 Addition = namedtuple('Addition', 'key imported extracted_imported')
@@ -59,6 +59,7 @@ class Diff(with_metaclass(ABCMeta, object)):
         """
 
     def compute(self):
+        problems = defaultdict(list)
         for name in 'existing', 'imported':
             mapping = {}
             sequence = getattr(self, name)
@@ -69,20 +70,27 @@ class Diff(with_metaclass(ABCMeta, object)):
                     continue
                 key, extracted = extracted
                 if key in mapping:
-                    existing_raw, existing_extracted = mapping[key]
-                    raise KeyError(
-                        "{key!r} occurs more than once in {name}, "
-                        "first was {existing_extracted!r} from {existing!r}, "
-                        "next was {new_extracted!r} from {new!r}".format(
-                            key=key, name=name,
-                            existing_extracted=existing_extracted,
-                            existing=existing_raw,
-                            new_extracted=extracted,
-                            new=raw,
-                        ))
-                mapping[key] = raw, extracted
+                    problems[name, key].append((raw, extracted))
+                else:
+                    mapping[key] = raw, extracted
             setattr(self, name+'_mapping', mapping)
             setattr(self, name+'_keys', set(mapping))
+
+        if problems:
+            lines = []
+            for name_key, dups in sorted(problems.items()):
+                name, key = name_key
+                mapping = getattr(self, name+'_mapping')
+                dups.insert(0, mapping[key])
+                lines.append(
+                    "{key!r} occurs {len} times in {name}: {repr}".format(
+                        key=key,
+                        len=len(dups),
+                        name=name,
+                        repr=', '.join(repr(extracted)+' from '+repr(raw)
+                                       for raw, extracted in dups)
+                    ))
+            raise AssertionError('\n'.join(lines))
 
         self.to_add = []
         self.to_update = []

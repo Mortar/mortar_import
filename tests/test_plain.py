@@ -111,13 +111,19 @@ class TestPlain(TestCase):
 
         DiffTuple, mock = self.make_differ()
 
-        diff = DiffTuple([('a', 1, 2), ('a', 3, 4)], [])
+        diff = DiffTuple([('a', 1, 2), ('a', 3, 4),
+                          ('b', 1, 2), ('b', 3, 4)], [])
 
         with ShouldRaise(
-                KeyError("'a' occurs more than once in existing, "
-                         "first was ('a', 2) from ('a', 1, 2), "
-                         "next was ('a', 4) from ('a', 3, 4)")):
-            diff.apply()
+                AssertionError(
+                    "'a' occurs 2 times in existing: "
+                    "('a', 2) from ('a', 1, 2), "
+                    "('a', 4) from ('a', 3, 4)\n"
+                    "'b' occurs 2 times in existing: "
+                    "('b', 2) from ('b', 1, 2), "
+                    "('b', 4) from ('b', 3, 4)"
+                )):
+            diff.compute()
 
     def test_duplicate_imported_key(self):
 
@@ -126,10 +132,12 @@ class TestPlain(TestCase):
         diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
 
         with ShouldRaise(
-                KeyError("'a' occurs more than once in imported, "
-                         "first was ('a', 2) from ('a', 1, 2), "
-                         "next was ('a', 4) from ('a', 3, 4)")):
-            diff.apply()
+                AssertionError(
+                    "'a' occurs 2 times in imported: "
+                    "('a', 2) from ('a', 1, 2), "
+                    "('a', 4) from ('a', 3, 4)"
+                )):
+            diff.compute()
 
     def test_skip(self):
         mock = Mock()
