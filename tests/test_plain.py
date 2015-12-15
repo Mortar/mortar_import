@@ -139,6 +139,85 @@ class TestPlain(TestCase):
                 )):
             diff.compute()
 
+    def test_duplicate_imported_key_dealt_with(self):
+
+        DiffTuple, mock = self.make_differ()
+
+        def handle_imported_problem(self, key, dups):
+            first, second = dups
+            first_raw, first_extracted = first
+            second_raw, second_extracted = second
+            return [(key,
+                     first_raw,
+                     (key, first_raw[1]+second_raw[1]))]
+
+        DiffTuple.handle_imported_problem = handle_imported_problem
+
+        diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
+
+        diff.apply()
+
+        compare([
+            call.add('a', ('a', 1, 2), ('a', 4)),
+        ], mock.mock_calls)
+
+    def test_duplicate_imported_key_dealt_with_new_key(self):
+
+        DiffTuple, mock = self.make_differ()
+
+        def handle_imported_problem(self, key, dups):
+            for raw, extracted in dups:
+                yield key+str(raw[1]), raw, extracted
+
+        DiffTuple.handle_imported_problem = handle_imported_problem
+
+        diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
+
+        diff.apply()
+
+        compare([
+            call.add('a1', ('a', 1, 2), ('a', 2)),
+            call.add('a3', ('a', 3, 4), ('a', 4)),
+        ], mock.mock_calls)
+
+    def test_duplicate_imported_key_not_dealt_with(self):
+
+        DiffTuple, mock = self.make_differ()
+
+        def handle_imported_problem(self, key, dups):
+            return
+
+        DiffTuple.handle_imported_problem = handle_imported_problem
+
+        diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
+
+
+        with ShouldRaise(
+                AssertionError(
+                    "'a' occurs 2 times in imported: "
+                    "('a', 2) from ('a', 1, 2), "
+                    "('a', 4) from ('a', 3, 4)"
+                )):
+            diff.compute()
+
+    def test_duplicate_imported_key_dealt_with_wrong(self):
+
+        DiffTuple, mock = self.make_differ()
+
+        def handle_imported_problem(self, key, dups):
+            return [(key, dups[0][0], dups[0][1]),
+                    (key, dups[1][0], dups[1][1])]
+
+        DiffTuple.handle_imported_problem = handle_imported_problem
+
+        diff = DiffTuple([], [('a', 1, 2), ('a', 3, 4)])
+
+        with ShouldRaise(
+                ValueError(
+                    "Problem handling for 'a' resulted in duplicate key"
+                )):
+            diff.compute()
+
     def test_skip(self):
         mock = Mock()
 

@@ -81,7 +81,25 @@ class Diff(with_metaclass(ABCMeta, object)):
             for name_key, dups in sorted(problems.items()):
                 name, key = name_key
                 mapping = getattr(self, name+'_mapping')
+                keys = getattr(self, name+'_keys')
                 dups.insert(0, mapping[key])
+
+                handler = getattr(self, 'handle_'+name+'_problem', None)
+                if handler:
+                    result = handler(key, dups)
+                    if result:
+                        del mapping[key]
+                        keys.remove(key)
+                        for key, raw, extracted in result:
+                            if key in mapping:
+                                raise ValueError((
+                                    'Problem handling for {!r} '
+                                    'resulted in duplicate key'
+                                ).format(key))
+                            mapping[key] = raw, extracted
+                            keys.add(key)
+                        continue
+
                 lines.append(
                     "{key!r} occurs {len} times in {name}: {repr}".format(
                         key=key,
@@ -90,7 +108,8 @@ class Diff(with_metaclass(ABCMeta, object)):
                         repr=', '.join(repr(extracted)+' from '+repr(raw)
                                        for raw, extracted in dups)
                     ))
-            raise AssertionError('\n'.join(lines))
+            if lines:
+                raise AssertionError('\n'.join(lines))
 
         self.to_add = []
         self.to_update = []
