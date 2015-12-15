@@ -2,11 +2,11 @@ from abc import ABCMeta, abstractmethod
 from collections import namedtuple, defaultdict
 from six import with_metaclass
 
-Addition = namedtuple('Addition', 'key imported extracted_imported')
+Addition = namedtuple('Addition', 'key imported imported_extracted')
 Update = namedtuple('Update', 'key '
                               'existing existing_extracted '
                               'imported imported_extracted')
-Deletion = namedtuple('Deletion', 'key existing existing_imported')
+Deletion = namedtuple('Deletion', 'key existing existing_extracted')
 
 
 class Diff(with_metaclass(ABCMeta, object)):
