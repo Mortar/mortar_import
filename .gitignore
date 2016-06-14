@@ -5,3 +5,5 @@ pip-selfcheck.json
 build/
 dist/
 pyvenv.cfg
+bin/
+lib/
