@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 class SQLAlchemyDiff(Diff):
 
     flush_per_type = True
+    ignore_fields = set()
 
     def __init__(self, session, imported):
         self.session = session
@@ -26,7 +27,8 @@ class SQLAlchemyDiff(Diff):
     def extract_existing(self, obj):
         i = inspect(obj)
         key = i.identity
-        extracted = {name: getattr(obj, name) for name in i.attrs.keys()}
+        extracted = {name: getattr(obj, name) for name in i.attrs.keys()
+                     if name not in self.ignore_fields}
         return key, extracted
 
     @abstractmethod

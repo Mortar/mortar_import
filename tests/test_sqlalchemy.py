@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from mortar_import.diff import Addition, Update, Deletion
 from mortar_import.extractors import MultiKeyDictExtractor
 from mortar_import.sqlalchemy import SQLAlchemyDiff
 from mortar_rdb import get_session
@@ -200,9 +201,11 @@ class TestSQLAlchemy(TestCase):
         compare(expected, actual)
 
     def test_auto_id(self):
-        self.session.add(MultiPK(name='a', value=1))
-        self.session.add(MultiPK(name='b', value=2))
-        self.session.add(MultiPK(name='c', value=3))
+        deleted = AutoPK(name='a', value=1)
+        self.session.add(deleted)
+        self.session.add(AutoPK(name='b', value=2))
+        existing = AutoPK(name='c', value=3)
+        self.session.add(existing)
 
         imported = [
             dict(name='b', value=2),
@@ -213,14 +216,35 @@ class TestSQLAlchemy(TestCase):
         class TestDiff(SQLAlchemyDiff):
 
             model = AutoPK
-            extract_imported = MultiKeyDictExtractor('name', 'value')
+            extract_imported = MultiKeyDictExtractor('name')
+            ignore_fields = {'id'}
 
             def extract_existing(self, obj):
                 _, extracted = super(TestDiff, self).extract_existing(obj)
-                key = (extracted['name'], extracted['value'])
+                key = (extracted['name'], )
                 return key, extracted
 
         diff = TestDiff(self.session, imported)
+
+        diff.compute()
+
+        compare(diff.to_add, [
+            Addition(key=('d',),
+                     imported={'name': 'd', 'value': 5},
+                     imported_extracted={'name': 'd', 'value': 5})
+        ])
+        compare(diff.to_update, [
+            Update(key=('c',),
+                   existing=existing,
+                   existing_extracted={'value': 3, 'name': 'c'},
+                   imported={'value': 4, 'name': 'c'},
+                   imported_extracted={'value': 4, 'name': 'c'})
+        ])
+        compare(diff.to_delete, [
+            Deletion(key=('a',),
+                     existing=deleted,
+                     existing_extracted={'name': 'a', 'value': 1})
+        ])
 
         diff.apply()
 
