@@ -25,10 +25,12 @@ class SQLAlchemyDiff(Diff):
         return self.session.query(self.model)
 
     def extract_existing(self, obj):
-        i = inspect(obj)
-        key = i.identity
-        extracted = {name: getattr(obj, name) for name in i.attrs.keys()
-                     if name not in self.ignore_fields}
+        state = inspect(obj)
+        relationships = state.mapper.relationships
+        key = state.identity
+        extracted = {name: attr.value for (name, attr) in state.attrs.items()
+                     if not (name in self.ignore_fields or
+                             name in relationships)}
         return key, extracted
 
     @abstractmethod

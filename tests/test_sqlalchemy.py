@@ -5,10 +5,10 @@ from mortar_import.extractors import MultiKeyDictExtractor
 from mortar_import.sqlalchemy import SQLAlchemyDiff
 from mortar_rdb import get_session
 from mortar_rdb.testing import register_session
-from sqlalchemy import Column, Integer
-from sqlalchemy import String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from testfixtures import ShouldRaise, compare
 
 Base = declarative_base()
@@ -32,6 +32,14 @@ class AutoPK(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     value = Column(Integer)
+
+
+class FKToSimple(Base):
+    __tablename__ = 'simple_referrer'
+    name = Column(String, primary_key=True)
+    value = Column(String, ForeignKey('simple.key'))
+    simple = relationship("Simple")
+
 
 class TestSQLAlchemy(TestCase):
 
@@ -257,6 +265,63 @@ class TestSQLAlchemy(TestCase):
         actual = [
             dict(name=o.name, value=o.value)
             for o in self.session.query(AutoPK).order_by('name', 'value')
+        ]
+
+        compare(expected, actual)
+
+    def test_foreign_keys(self):
+        s1 = Simple(key='s1', value=3)
+        s2 = Simple(key='s2', value=4)
+        self.session.add_all((s1, s2))
+        deleted = FKToSimple(name='a', simple=s1)
+        changed = FKToSimple(name='b', simple=s1)
+        existing = FKToSimple(name='c', simple=s1)
+        self.session.add_all((deleted, changed, existing))
+
+        imported = [
+            dict(name='b', value='s2'),
+            dict(name='c', value='s1'),
+            dict(name='d', value='s2'),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+
+            model = FKToSimple
+            extract_imported = MultiKeyDictExtractor('name')
+
+        diff = TestDiff(self.session, imported)
+
+        diff.compute()
+
+        compare(diff.to_add, [
+            Addition(key=('d',),
+                     imported={'name': 'd', 'value': 's2'},
+                     imported_extracted={'name': 'd', 'value': 's2'})
+        ])
+        compare(diff.to_update, [
+            Update(key=('b',),
+                   existing=changed,
+                   existing_extracted={'value': 's1', 'name': 'b'},
+                   imported={'value': 's2', 'name': 'b'},
+                   imported_extracted={'value': 's2', 'name': 'b'})
+        ])
+        compare(diff.to_delete, [
+            Deletion(key=('a',),
+                     existing=deleted,
+                     existing_extracted={'name': 'a', 'value': 's1'})
+        ])
+
+        diff.apply()
+
+        expected = [
+            dict(name='b', value='s2'),
+            dict(name='c', value='s1'),
+            dict(name='d', value='s2'),
+        ]
+
+        actual = [
+            dict(name=o.name, value=o.value)
+            for o in self.session.query(FKToSimple).order_by('name', 'value')
         ]
 
         compare(expected, actual)
