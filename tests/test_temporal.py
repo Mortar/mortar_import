@@ -17,8 +17,9 @@ Base = declarative_base()
 
 class Model(Temporal, Base):
     __tablename__ = 'model'
-    key = Column(String, primary_key=True)
-    source = Column(String, primary_key=True, default='')
+    key_columns = ('key', 'source')
+    key = Column(String)
+    source = Column(String, default='')
     value = Column(Integer)
 
 

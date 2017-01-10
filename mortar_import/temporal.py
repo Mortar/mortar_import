@@ -22,9 +22,11 @@ class TemporalDiff(SQLAlchemyDiff):
                            .filter(self.model.value_at(self.at))
 
     def extract_existing(self, obj):
-        key, extracted = super(TemporalDiff, self).extract_existing(obj)
+        _, extracted = super(TemporalDiff, self).extract_existing(obj)
         del extracted['period']
-        return key[1:], extracted
+        del extracted['id']
+        key = tuple(getattr(obj, name) for name in obj.key_columns)
+        return key, extracted
 
     def add(self, key, imported, extracted_imported):
         obj = self.model(**extracted_imported)
