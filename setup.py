@@ -1,5 +1,5 @@
-# Copyright (c) 2015 Chris Withers
-# See README.md for license details.
+# Copyright (c) 2015-2016 Chris Withers
+# See README.rst for license details.
 
 import os
 from setuptools import setup, find_packages
@@ -9,7 +9,7 @@ base_dir = os.path.dirname(__file__)
 setup(
     name='mortar_import',
     author='Chris Withers',
-    version='0.10.0',
+    version='0.11.0',
     author_email='chris@withers.org',
     license='MIT',
     description="Tools for importing data, particularly when using mortar_mixins",
