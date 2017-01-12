@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 from unittest import TestCase
 
-from mortar_import.extractors import MultiKeyDictExtractor
+from mortar_import.extractors import MultiKeyDictExtractor, DictExtractor
 from mortar_import.temporal import TemporalDiff
 from mortar_mixins import Temporal
 from mortar_rdb import get_session
@@ -23,6 +23,12 @@ class Model(Temporal, Base):
     value = Column(Integer)
 
 
+class NoKeys(Temporal, Base):
+    __tablename__ = 'no_keys'
+    not_key = Column(String)
+    value = Column(Integer)
+
+
 class TestTemporal(TestCase):
 
     def setUp(self):
@@ -34,7 +40,7 @@ class TestTemporal(TestCase):
     def test_abstract(self):
         with ShouldRaise(TypeError(
                 "Can't instantiate abstract class TemporalDiff with "
-                "abstract methods extract_imported, model"
+                "abstract methods model"
         )):
             TemporalDiff([], [])
 
@@ -57,6 +63,7 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
+            # this is here to test is can be explicitly specified ;-)
             extract_imported = MultiKeyDictExtractor('key', 'source')
 
         diff = TestDiff(self.session, imported, dt(2001, 1, 1))
@@ -95,7 +102,6 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
-            extract_imported = MultiKeyDictExtractor('key', 'source')
             def existing(self):
                 return super(TestDiff, self).existing().filter_by(source='')
 
@@ -141,7 +147,6 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
-            extract_imported = MultiKeyDictExtractor('key', 'source')
 
         diff = TestDiff(self.session, imported, dt(2500, 1, 1))
 
@@ -170,7 +175,6 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
-            extract_imported = MultiKeyDictExtractor('key', 'source')
 
         diff = TestDiff(self.session, imported, dt(2000, 1, 1))
 
@@ -188,7 +192,6 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
-            extract_imported = MultiKeyDictExtractor('key', 'source')
             replace = True
 
         diff = TestDiff(self.session, imported, dt(2000, 1, 1))
@@ -203,3 +206,50 @@ class TestTemporal(TestCase):
                   for o in self.session.query(Model).order_by('key', 'period')]
 
         compare(expected, actual)
+
+    def test_no_keys_bad(self):
+        active = R(dt(2000, 1, 1), None)
+
+        self.session.add(NoKeys(not_key='a', value=1, period=active))
+
+        class TestDiff(TemporalDiff):
+            model = NoKeys
+            extract_imported = DictExtractor('not_key')
+
+        diff = TestDiff(self.session, [], dt(2001, 1, 1))
+
+        with ShouldRaise(TypeError):
+            diff.apply()
+
+    def test_no_keys_good(self):
+        exists = R(dt(2000, 1, 1), None)
+        closed = R(dt(2000, 1, 1), dt(2001, 1, 1))
+        added = R(dt(2001, 1, 1), None)
+        self.session.add(NoKeys(not_key='a', value=1, period=exists))
+        self.session.add(NoKeys(not_key='b', value=2, period=exists))
+
+        imported = [
+            dict(not_key='a', value=3),
+            dict(not_key='c', value=4),
+        ]
+
+        class TestDiff(TemporalDiff):
+            model = NoKeys
+            key_fields = ['not_key']
+
+        diff = TestDiff(self.session, imported, dt(2001, 1, 1))
+
+        diff.apply()
+
+        expected = [
+            dict(not_key='a', value=1, period=closed),
+            dict(not_key='a', value=3, period=added),
+            dict(not_key='b', value=2, period=closed),
+            dict(not_key='c', value=4, period=added),
+        ]
+
+        actual = [dict(not_key=o.not_key, value=o.value, period=o.period)
+                  for o in self.session.query(NoKeys).order_by('not_key', 'period')]
+
+        compare(expected, actual)
+

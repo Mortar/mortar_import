@@ -10,11 +10,14 @@ from sqlalchemy import inspect
 class TemporalDiff(SQLAlchemyDiff):
 
     # is it okay to replace whole rows because the update
-    # has the same time period as the existign value?
+    # has the same time period as the existing value?
     replace = False
+    key_fields = None
 
     def __init__(self, session, imported, at):
         self.at = at
+        if self.key_fields is None:
+            self.key_fields = self.model.key_columns
         super(TemporalDiff, self).__init__(session, imported)
 
     def existing(self):
@@ -25,8 +28,13 @@ class TemporalDiff(SQLAlchemyDiff):
         _, extracted = super(TemporalDiff, self).extract_existing(obj)
         del extracted['period']
         del extracted['id']
-        key = tuple(getattr(obj, name) for name in obj.key_columns)
+        key = tuple(getattr(obj, name) for name in self.key_fields)
         return key, extracted
+
+    def extract_imported(self, obj):
+        # this assumes obj is a dict, override this method if that's not
+        # the case
+        return tuple(obj[k] for k in self.key_fields), obj
 
     def add(self, key, imported, extracted_imported):
         obj = self.model(**extracted_imported)
