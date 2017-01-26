@@ -11,7 +11,9 @@ python:
   - "2.7"
 
 # command to install dependencies
-install: "pip install -Ue .[test,build]"
+install: 
+- "pip install -U pip setuptools"
+- "pip install -Ue .[test,build]"
 
 before_script:
 - sh -c "psql -c 'create database testdb' -U postgres"
