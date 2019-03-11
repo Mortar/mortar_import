@@ -1,7 +1,8 @@
 man/
 *.egg-info
 pip-selfcheck.json
-.coverage*
+.coverage
+.coverage.*
 build/
 dist/
 pyvenv.cfg

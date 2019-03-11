@@ -1,8 +1,5 @@
 from unittest import TestCase
 
-from mortar_import.diff import Addition, Update, Deletion
-from mortar_import.extractors import MultiKeyDictExtractor
-from mortar_import.sqlalchemy import SQLAlchemyDiff
 from mortar_rdb import get_session
 from mortar_rdb.testing import register_session
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -10,6 +7,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from testfixtures import ShouldRaise, compare
+
+from mortar_import.diff import Addition, Update, Deletion
+from mortar_import.extractors import MultiKeyDictExtractor
+from mortar_import.sqlalchemy import SQLAlchemyDiff
 
 Base = declarative_base()
 
@@ -39,6 +40,18 @@ class FKToSimple(Base):
     name = Column(String, primary_key=True)
     value = Column(String, ForeignKey('simple.key'))
     simple = relationship("Simple")
+
+
+class SingleColumn(Base):
+    __tablename__ = 'single_column'
+    value = Column(String, primary_key=True)
+
+
+class FKToSingleColumn(Base):
+    __tablename__ = 'single_column_referrer'
+    id = Column(Integer, primary_key=True)
+    value = Column(String, ForeignKey('single_column.value'))
+    ref = relationship("SingleColumn")
 
 
 class TestSQLAlchemy(TestCase):
@@ -322,6 +335,52 @@ class TestSQLAlchemy(TestCase):
         actual = [
             dict(name=o.name, value=o.value)
             for o in self.session.query(FKToSimple).order_by('name', 'value')
+        ]
+
+        compare(expected, actual)
+
+    def test_single_column(self):
+        s1 = SingleColumn(value='s1')
+        s2 = SingleColumn(value='s2')
+        f1 = FKToSingleColumn(ref=s1)
+        self.session.add_all((s1, s2, f1))
+
+        imported = [
+            dict(value='s1'),
+            dict(value='s3'),
+        ]
+
+        class TestDiff(SQLAlchemyDiff):
+
+            model = SingleColumn
+            extract_imported = MultiKeyDictExtractor('value')
+
+        diff = TestDiff(self.session, imported)
+
+        diff.compute()
+
+        compare(diff.to_add, [
+            Addition(key=('s3',),
+                     imported={'value': 's3'},
+                     imported_extracted={'value': 's3'})
+        ])
+        compare(diff.to_update, [])
+        compare(diff.to_delete, [
+            Deletion(key=('s2',),
+                     existing=s2,
+                     existing_extracted={'value': 's2'})
+        ])
+
+        diff.apply()
+
+        expected = [
+            dict(value='s1'),
+            dict(value='s3'),
+        ]
+
+        actual = [
+            dict(value=o.value)
+            for o in self.session.query(SingleColumn).order_by('value')
         ]
 
         compare(expected, actual)
