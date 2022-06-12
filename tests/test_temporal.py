@@ -38,10 +38,7 @@ class TestTemporal(TestCase):
         Base.metadata.create_all(self.session.bind)
 
     def test_abstract(self):
-        with ShouldRaise(TypeError(
-                "Can't instantiate abstract class TemporalDiff with "
-                "abstract methods model"
-        )):
+        with ShouldRaise(TypeError):
             TemporalDiff([], [])
 
     def test_normal_set(self):

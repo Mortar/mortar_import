@@ -63,10 +63,7 @@ class TestSQLAlchemy(TestCase):
         Base.metadata.create_all(self.session.bind)
 
     def test_abstract(self):
-        with ShouldRaise(TypeError(
-                "Can't instantiate abstract class SQLAlchemyDiff with "
-                "abstract methods extract_imported, model"
-        )):
+        with ShouldRaise(TypeError):
             SQLAlchemyDiff([], [])
 
     def test_simple(self):
