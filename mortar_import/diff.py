@@ -3,9 +3,9 @@ from collections import namedtuple, defaultdict
 from six import with_metaclass
 
 Addition = namedtuple('Addition', 'key imported imported_extracted')
-Update = namedtuple('Update', 'key '
-                              'existing existing_extracted '
-                              'imported imported_extracted')
+Update = namedtuple(
+    'Update', 'key ' 'existing existing_extracted ' 'imported imported_extracted'
+)
 Deletion = namedtuple('Deletion', 'key existing existing_extracted')
 
 
@@ -44,10 +44,7 @@ class Diff(with_metaclass(ABCMeta, object)):
         """
 
     @abstractmethod
-    def update(self,
-               key,
-               existing, existing_extracted,
-               imported, imported_extracted):
+    def update(self, key, existing, existing_extracted, imported, imported_extracted):
         """
         Handle an update of an existing object.
         """
@@ -63,7 +60,7 @@ class Diff(with_metaclass(ABCMeta, object)):
         for name in 'existing', 'imported':
             mapping = {}
             sequence = getattr(self, name)
-            extract = getattr(self, 'extract_'+name)
+            extract = getattr(self, 'extract_' + name)
             for raw in sequence:
                 extracted = extract(raw)
                 if extracted is None:
@@ -73,18 +70,18 @@ class Diff(with_metaclass(ABCMeta, object)):
                     problems[name, key].append((raw, extracted))
                 else:
                     mapping[key] = raw, extracted
-            setattr(self, name+'_mapping', mapping)
-            setattr(self, name+'_keys', set(mapping))
+            setattr(self, name + '_mapping', mapping)
+            setattr(self, name + '_keys', set(mapping))
 
         if problems:
             lines = []
             for name_key, dups in sorted(problems.items()):
                 name, key = name_key
-                mapping = getattr(self, name+'_mapping')
-                keys = getattr(self, name+'_keys')
+                mapping = getattr(self, name + '_mapping')
+                keys = getattr(self, name + '_keys')
                 dups.insert(0, mapping[key])
 
-                handler = getattr(self, 'handle_'+name+'_problem', None)
+                handler = getattr(self, 'handle_' + name + '_problem', None)
                 if handler:
                     result = handler(key, dups)
                     if result:
@@ -92,10 +89,12 @@ class Diff(with_metaclass(ABCMeta, object)):
                         keys.remove(key)
                         for key, raw, extracted in result:
                             if key in mapping:
-                                raise ValueError((
-                                    'Problem handling for {!r} '
-                                    'resulted in duplicate key'
-                                ).format(key))
+                                raise ValueError(
+                                    (
+                                        'Problem handling for {!r} '
+                                        'resulted in duplicate key'
+                                    ).format(key)
+                                )
                             mapping[key] = raw, extracted
                             keys.add(key)
                         continue
@@ -105,9 +104,12 @@ class Diff(with_metaclass(ABCMeta, object)):
                         key=key,
                         len=len(dups),
                         name=name,
-                        repr=', '.join(repr(extracted)+' from '+repr(raw)
-                                       for raw, extracted in dups)
-                    ))
+                        repr=', '.join(
+                            repr(extracted) + ' from ' + repr(raw)
+                            for raw, extracted in dups
+                        ),
+                    )
+                )
             if lines:
                 raise AssertionError('\n'.join(lines))
 
@@ -122,9 +124,11 @@ class Diff(with_metaclass(ABCMeta, object)):
             existing, existing_extracted = self.existing_mapping[key]
             imported, imported_extracted = self.imported_mapping[key]
             if existing_extracted != imported_extracted:
-                self.to_update.append(Update(key,
-                                             existing, existing_extracted,
-                                             imported, imported_extracted))
+                self.to_update.append(
+                    Update(
+                        key, existing, existing_extracted, imported, imported_extracted
+                    )
+                )
 
         for key in sorted(self.existing_keys - self.imported_keys):
             self.to_delete.append(Deletion(key, *self.existing_mapping[key]))
@@ -134,9 +138,8 @@ class Diff(with_metaclass(ABCMeta, object)):
             self.compute()
         for op in 'delete', 'update', 'add':
             meth = getattr(self, op)
-            for action in  getattr(self, 'to_'+op):
+            for action in getattr(self, 'to_' + op):
                 meth(*action)
-            post = getattr(self, 'post_'+op)
+            post = getattr(self, 'post_' + op)
             if post is not None:
                 post()
-

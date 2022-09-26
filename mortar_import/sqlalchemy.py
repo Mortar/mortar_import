@@ -1,10 +1,12 @@
 from __future__ import absolute_import
+
 # import orm here so that event registration work
 import sqlalchemy.orm
 
 from abc import abstractmethod, abstractproperty
 from mortar_import.diff import Diff
 from sqlalchemy import inspect
+
 
 class SQLAlchemyDiff(Diff):
 
@@ -28,9 +30,11 @@ class SQLAlchemyDiff(Diff):
         state = inspect(obj)
         relationships = state.mapper.relationships
         key = state.identity
-        extracted = {name: attr.value for (name, attr) in state.attrs.items()
-                     if not (name in self.ignore_fields or
-                             name in relationships)}
+        extracted = {
+            name: attr.value
+            for (name, attr) in state.attrs.items()
+            if not (name in self.ignore_fields or name in relationships)
+        }
         return key, extracted
 
     @abstractmethod
@@ -44,10 +48,7 @@ class SQLAlchemyDiff(Diff):
     def add(self, key, imported, extracted_imported):
         self.session.add(self.model(**extracted_imported))
 
-    def update(self,
-               key,
-               existing, existing_extracted,
-               imported, imported_extracted):
+    def update(self, key, existing, existing_extracted, imported, imported_extracted):
         for key, value in imported_extracted.items():
             setattr(existing, key, value)
 

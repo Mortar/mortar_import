@@ -20,9 +20,15 @@ setup(
     zip_safe=False,
     install_requires=['six'],
     extras_require=dict(
-        test=['pytest', 'pytest-cov','testfixtures', 'coveralls',
-              'mortar_mixins', 'mortar_rdb', 'mock'],
-        build=['setuptools-git', 'wheel', 'twine']
-        ),
-    )
-
+        test=[
+            'pytest',
+            'pytest-cov',
+            'testfixtures',
+            'coveralls',
+            'mortar_mixins',
+            'mortar_rdb',
+            'mock',
+        ],
+        build=['setuptools-git', 'wheel', 'twine'],
+    ),
+)

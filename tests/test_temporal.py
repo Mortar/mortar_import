@@ -30,7 +30,6 @@ class NoKeys(Temporal, Base):
 
 
 class TestTemporal(TestCase):
-
     def setUp(self):
         register_session(transactional=False)
         self.session = get_session()
@@ -77,8 +76,10 @@ class TestTemporal(TestCase):
             dict(key='y', value=69, period=future),
         ]
 
-        actual = [dict(key=o.key, value=o.value, period=o.period)
-                  for o in self.session.query(Model).order_by('key', 'period')]
+        actual = [
+            dict(key=o.key, value=o.value, period=o.period)
+            for o in self.session.query(Model).order_by('key', 'period')
+        ]
 
         compare(expected, actual)
 
@@ -99,6 +100,7 @@ class TestTemporal(TestCase):
 
         class TestDiff(TemporalDiff):
             model = Model
+
             def existing(self):
                 return super(TestDiff, self).existing().filter_by(source='')
 
@@ -107,25 +109,19 @@ class TestTemporal(TestCase):
         diff.apply()
 
         expected = [
-            dict(key='a', value=1,
-                 period=R(dt(2000, 1, 1), dt(2001, 1, 1)), source=''),
-            dict(key='b', value=2,
-                 period=active, source=''),
-            dict(key='c', value=3,
-                 period=R(dt(2000, 1, 1), dt(2001, 1, 1)), source=''),
-            dict(key='c', value=4,
-                 period=R(dt(2001, 1, 1), None), source=''),
-            dict(key='d', value=5,
-                 period=R(dt(2001, 1, 1), None), source=''),
-            dict(key='x', value=42,
-                 period=active, source='foo'),
-            dict(key='y', value=69,
-                 period=active, source='foo'),
+            dict(key='a', value=1, period=R(dt(2000, 1, 1), dt(2001, 1, 1)), source=''),
+            dict(key='b', value=2, period=active, source=''),
+            dict(key='c', value=3, period=R(dt(2000, 1, 1), dt(2001, 1, 1)), source=''),
+            dict(key='c', value=4, period=R(dt(2001, 1, 1), None), source=''),
+            dict(key='d', value=5, period=R(dt(2001, 1, 1), None), source=''),
+            dict(key='x', value=42, period=active, source='foo'),
+            dict(key='y', value=69, period=active, source='foo'),
         ]
 
-        actual = [dict(key=o.key, value=o.value,
-                       period=o.period, source=o.source)
-                  for o in self.session.query(Model).order_by('key', 'period')]
+        actual = [
+            dict(key=o.key, value=o.value, period=o.period, source=o.source)
+            for o in self.session.query(Model).order_by('key', 'period')
+        ]
 
         compare(expected, actual)
 
@@ -156,8 +152,10 @@ class TestTemporal(TestCase):
             dict(key='a', value=4, period=future),
         ]
 
-        actual = [dict(key=o.key, value=o.value, period=o.period)
-                  for o in self.session.query(Model).order_by('key', 'period')]
+        actual = [
+            dict(key=o.key, value=o.value, period=o.period)
+            for o in self.session.query(Model).order_by('key', 'period')
+        ]
 
         compare(expected, actual)
 
@@ -199,8 +197,10 @@ class TestTemporal(TestCase):
             dict(key='a', value=2, period=active),
         ]
 
-        actual = [dict(key=o.key, value=o.value, period=o.period)
-                  for o in self.session.query(Model).order_by('key', 'period')]
+        actual = [
+            dict(key=o.key, value=o.value, period=o.period)
+            for o in self.session.query(Model).order_by('key', 'period')
+        ]
 
         compare(expected, actual)
 
@@ -245,8 +245,9 @@ class TestTemporal(TestCase):
             dict(not_key='c', value=4, period=added),
         ]
 
-        actual = [dict(not_key=o.not_key, value=o.value, period=o.period)
-                  for o in self.session.query(NoKeys).order_by('not_key', 'period')]
+        actual = [
+            dict(not_key=o.not_key, value=o.value, period=o.period)
+            for o in self.session.query(NoKeys).order_by('not_key', 'period')
+        ]
 
         compare(expected, actual)
-

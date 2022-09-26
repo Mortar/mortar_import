@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 # import orm here so that event registration work
 import sqlalchemy.orm
 
@@ -21,8 +22,7 @@ class TemporalDiff(SQLAlchemyDiff):
         super(TemporalDiff, self).__init__(session, imported)
 
     def existing(self):
-        return self.session.query(self.model)\
-                           .filter(self.model.value_at(self.at))
+        return self.session.query(self.model).filter(self.model.value_at(self.at))
 
     def extract_existing(self, obj):
         _, extracted = super(TemporalDiff, self).extract_existing(obj)
@@ -41,23 +41,24 @@ class TemporalDiff(SQLAlchemyDiff):
         obj.value_from = self.at
         self.session.add(obj)
 
-    def update(self,
-               key,
-               existing, existing_extracted,
-               imported, imported_extracted):
+    def update(self, key, existing, existing_extracted, imported, imported_extracted):
         if existing.value_from == self.at:
             if self.replace:
                 for key, value in imported_extracted.items():
                     setattr(existing, key, value)
             else:
-                raise ValueError((
-                    "Replacing existing value for {key!r} over {period!r} "
-                    "would lose history. Existing: {existing}, "
-                    "imported {imported}."
-                    ).format(key=key,
-                             period=existing.period,
-                             existing=existing_extracted,
-                             imported=imported_extracted))
+                raise ValueError(
+                    (
+                        "Replacing existing value for {key!r} over {period!r} "
+                        "would lose history. Existing: {existing}, "
+                        "imported {imported}."
+                    ).format(
+                        key=key,
+                        period=existing.period,
+                        existing=existing_extracted,
+                        imported=imported_extracted,
+                    )
+                )
         else:
             existing_value_to = existing.value_to
             existing.value_to = self.at

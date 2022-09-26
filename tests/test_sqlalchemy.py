@@ -55,7 +55,6 @@ class FKToSingleColumn(Base):
 
 
 class TestSQLAlchemy(TestCase):
-
     def setUp(self):
         register_session(transactional=False)
         self.session = get_session()
@@ -91,8 +90,10 @@ class TestSQLAlchemy(TestCase):
             dict(key='d', value=5),
         ]
 
-        actual = [dict(key=o.key, value=o.value)
-                  for o in self.session.query(Simple).order_by('key')]
+        actual = [
+            dict(key=o.key, value=o.value)
+            for o in self.session.query(Simple).order_by('key')
+        ]
 
         compare(expected, actual)
 
@@ -138,8 +139,10 @@ class TestSQLAlchemy(TestCase):
             dict(key='d', value=1),
         ]
 
-        actual = [dict(key=o.key, value=o.value)
-                  for o in self.session.query(Simple).order_by('key')]
+        actual = [
+            dict(key=o.key, value=o.value)
+            for o in self.session.query(Simple).order_by('key')
+        ]
 
         compare(expected, actual)
 
@@ -171,8 +174,10 @@ class TestSQLAlchemy(TestCase):
             dict(name='d', index=0, value=5),
         ]
 
-        actual = [dict(name=o.name, index=o.index, value=o.value)
-                  for o in self.session.query(MultiPK).order_by('name')]
+        actual = [
+            dict(name=o.name, index=o.index, value=o.value)
+            for o in self.session.query(MultiPK).order_by('name')
+        ]
 
         compare(expected, actual)
 
@@ -239,30 +244,45 @@ class TestSQLAlchemy(TestCase):
 
             def extract_existing(self, obj):
                 _, extracted = super(TestDiff, self).extract_existing(obj)
-                key = (extracted['name'], )
+                key = (extracted['name'],)
                 return key, extracted
 
         diff = TestDiff(self.session, imported)
 
         diff.compute()
 
-        compare(diff.to_add, [
-            Addition(key=('d',),
-                     imported={'name': 'd', 'value': 5},
-                     imported_extracted={'name': 'd', 'value': 5})
-        ])
-        compare(diff.to_update, [
-            Update(key=('c',),
-                   existing=existing,
-                   existing_extracted={'value': 3, 'name': 'c'},
-                   imported={'value': 4, 'name': 'c'},
-                   imported_extracted={'value': 4, 'name': 'c'})
-        ])
-        compare(diff.to_delete, [
-            Deletion(key=('a',),
-                     existing=deleted,
-                     existing_extracted={'name': 'a', 'value': 1})
-        ])
+        compare(
+            diff.to_add,
+            [
+                Addition(
+                    key=('d',),
+                    imported={'name': 'd', 'value': 5},
+                    imported_extracted={'name': 'd', 'value': 5},
+                )
+            ],
+        )
+        compare(
+            diff.to_update,
+            [
+                Update(
+                    key=('c',),
+                    existing=existing,
+                    existing_extracted={'value': 3, 'name': 'c'},
+                    imported={'value': 4, 'name': 'c'},
+                    imported_extracted={'value': 4, 'name': 'c'},
+                )
+            ],
+        )
+        compare(
+            diff.to_delete,
+            [
+                Deletion(
+                    key=('a',),
+                    existing=deleted,
+                    existing_extracted={'name': 'a', 'value': 1},
+                )
+            ],
+        )
 
         diff.apply()
 
@@ -303,23 +323,38 @@ class TestSQLAlchemy(TestCase):
 
         diff.compute()
 
-        compare(diff.to_add, [
-            Addition(key=('d',),
-                     imported={'name': 'd', 'value': 's2'},
-                     imported_extracted={'name': 'd', 'value': 's2'})
-        ])
-        compare(diff.to_update, [
-            Update(key=('b',),
-                   existing=changed,
-                   existing_extracted={'value': 's1', 'name': 'b'},
-                   imported={'value': 's2', 'name': 'b'},
-                   imported_extracted={'value': 's2', 'name': 'b'})
-        ])
-        compare(diff.to_delete, [
-            Deletion(key=('a',),
-                     existing=deleted,
-                     existing_extracted={'name': 'a', 'value': 's1'})
-        ])
+        compare(
+            diff.to_add,
+            [
+                Addition(
+                    key=('d',),
+                    imported={'name': 'd', 'value': 's2'},
+                    imported_extracted={'name': 'd', 'value': 's2'},
+                )
+            ],
+        )
+        compare(
+            diff.to_update,
+            [
+                Update(
+                    key=('b',),
+                    existing=changed,
+                    existing_extracted={'value': 's1', 'name': 'b'},
+                    imported={'value': 's2', 'name': 'b'},
+                    imported_extracted={'value': 's2', 'name': 'b'},
+                )
+            ],
+        )
+        compare(
+            diff.to_delete,
+            [
+                Deletion(
+                    key=('a',),
+                    existing=deleted,
+                    existing_extracted={'name': 'a', 'value': 's1'},
+                )
+            ],
+        )
 
         diff.apply()
 
@@ -356,17 +391,21 @@ class TestSQLAlchemy(TestCase):
 
         diff.compute()
 
-        compare(diff.to_add, [
-            Addition(key=('s3',),
-                     imported={'value': 's3'},
-                     imported_extracted={'value': 's3'})
-        ])
+        compare(
+            diff.to_add,
+            [
+                Addition(
+                    key=('s3',),
+                    imported={'value': 's3'},
+                    imported_extracted={'value': 's3'},
+                )
+            ],
+        )
         compare(diff.to_update, [])
-        compare(diff.to_delete, [
-            Deletion(key=('s2',),
-                     existing=s2,
-                     existing_extracted={'value': 's2'})
-        ])
+        compare(
+            diff.to_delete,
+            [Deletion(key=('s2',), existing=s2, existing_extracted={'value': 's2'})],
+        )
 
         diff.apply()
 
