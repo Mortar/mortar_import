@@ -24,7 +24,7 @@ setup(
             'pytest',
             'pytest-cov',
             'testfixtures',
-            'mortar_mixins',
+            'mortar_mixins>=3',
             'mock',
         ],
         build=['setuptools-git', 'wheel', 'twine'],
