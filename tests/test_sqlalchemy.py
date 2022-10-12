@@ -1,7 +1,5 @@
-from unittest import TestCase
-
-from mortar_rdb import get_session
-from mortar_rdb.testing import register_session
+import pytest
+from mortar_mixins.testing import create_tables_and_session
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
@@ -54,12 +52,13 @@ class FKToSingleColumn(Base):
     ref = relationship("SingleColumn")
 
 
-class TestSQLAlchemy(TestCase):
-    def setUp(self):
-        register_session(transactional=False)
-        self.session = get_session()
-        self.addCleanup(self.session.rollback)
-        Base.metadata.create_all(self.session.bind)
+class TestSQLAlchemy:
+
+    @pytest.fixture(autouse=True)
+    def session(self, db):
+        with create_tables_and_session(db, Base) as session:
+            self.session = session
+            yield session
 
     def test_abstract(self):
         with ShouldRaise(TypeError):

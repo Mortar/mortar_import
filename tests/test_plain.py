@@ -6,7 +6,8 @@ from testfixtures import compare, ShouldRaise
 from mortar_import.diff import Diff
 
 
-class TestPlain(TestCase):
+class TestPlain:
+
     def test_abstract(self):
         with ShouldRaise(
             TypeError(

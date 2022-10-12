@@ -1,6 +1,9 @@
 from datetime import datetime as dt
 from unittest import TestCase
 
+import pytest
+from mortar_mixins.testing import create_tables_and_session
+
 from mortar_import.extractors import MultiKeyDictExtractor, DictExtractor
 from mortar_import.temporal import TemporalDiff
 from mortar_mixins import Temporal
@@ -29,12 +32,13 @@ class NoKeys(Temporal, Base):
     value = Column(Integer)
 
 
-class TestTemporal(TestCase):
-    def setUp(self):
-        register_session(transactional=False)
-        self.session = get_session()
-        self.addCleanup(self.session.rollback)
-        Base.metadata.create_all(self.session.bind)
+class TestTemporal:
+
+    @pytest.fixture(autouse=True)
+    def session(self, db):
+        with create_tables_and_session(db, Base) as session:
+            self.session = session
+            yield session
 
     def test_abstract(self):
         with ShouldRaise(TypeError):
