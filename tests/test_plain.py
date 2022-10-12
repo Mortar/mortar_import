@@ -1,9 +1,10 @@
 from collections import namedtuple
+
 from mock import Mock, call
-from unittest import TestCase
-from mortar_import.extractors import DictExtractor, NamedTupleExtractor
 from testfixtures import compare, ShouldRaise
+
 from mortar_import.diff import Diff
+from mortar_import.extractors import DictExtractor, NamedTupleExtractor
 
 
 class TestPlain:

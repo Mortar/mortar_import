@@ -1,19 +1,16 @@
 from datetime import datetime as dt
-from unittest import TestCase
 
 import pytest
-from mortar_mixins.testing import create_tables_and_session
-
-from mortar_import.extractors import MultiKeyDictExtractor, DictExtractor
-from mortar_import.temporal import TemporalDiff
 from mortar_mixins import Temporal
-from mortar_rdb import get_session
-from mortar_rdb.testing import register_session
+from mortar_mixins.testing import create_tables_and_session
 from psycopg2.extras import DateTimeRange as R
 from sqlalchemy import Column, Integer
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declarative_base
 from testfixtures import ShouldRaise, compare
+
+from mortar_import.extractors import MultiKeyDictExtractor, DictExtractor
+from mortar_import.temporal import TemporalDiff
 
 Base = declarative_base()
 
