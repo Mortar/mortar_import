@@ -6,7 +6,9 @@
 mortar_import
 =============
 
-Tools for importing data, particularly when using mortar_mixins.
+Tools for importing data, particularly when using `mortar_mixins`__.
+
+__ https://github.com/Mortar/mortar_mixins
 
 Install from PyPI with pip.
 
@@ -31,5 +33,3 @@ Releasing
 To make a release, just update the version in ``setup.py``
 and push to https://github.com/Mortar/mortar_import
 and Carthorse should take care of the rest.
-
-

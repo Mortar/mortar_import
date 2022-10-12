@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2017 Chris Withers
+# Copyright (c) 2015 onwards Chris Withers
 # See README.rst for license details.
 
 import os
@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=['six'],
+    python_requires=">=3.7",
     extras_require=dict(
         test=[
             'pytest',

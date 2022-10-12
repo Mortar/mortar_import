@@ -1,4 +1,4 @@
-class SingleKeyDictExtractor(object):
+class SingleKeyDictExtractor:
     def __init__(self, key):
         self.key = key
 
@@ -6,7 +6,7 @@ class SingleKeyDictExtractor(object):
         return obj[self.key], obj
 
 
-class MultiKeyDictExtractor(object):
+class MultiKeyDictExtractor:
     def __init__(self, *keys):
         self.keys = keys
 
@@ -21,7 +21,7 @@ def DictExtractor(*keys):
         return MultiKeyDictExtractor(*keys)
 
 
-class NamedTupleExtractor(object):
+class NamedTupleExtractor:
     def __init__(self, *keys):
         self.keys = keys
 
