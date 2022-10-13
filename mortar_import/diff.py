@@ -1,25 +1,49 @@
-from abc import ABCMeta, abstractmethod
-from collections import namedtuple, defaultdict
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from typing import Tuple, List, Set, Dict, Callable, NamedTuple, Sequence
 
-Addition = namedtuple('Addition', 'key imported imported_extracted')
-Update = namedtuple(
-    'Update', 'key ' 'existing existing_extracted ' 'imported imported_extracted'
-)
-Deletion = namedtuple('Deletion', 'key existing existing_extracted')
+from .typing import Existing, Imported, ExtractedExisting, ExtractedImported, Key
 
 
-class Diff(metaclass=ABCMeta):
+class Addition(NamedTuple):
+    key: Key
+    imported: Imported
+    imported_extracted: ExtractedImported
 
-    to_add = to_update = to_delete = None
 
-    post_add = post_update = post_delete = None
+class Update(NamedTuple):
+    key: Key
+    existing: Existing
+    existing_extracted: ExtractedExisting
+    imported: Imported
+    imported_extracted: ExtractedImported
 
-    def __init__(self, existing, imported):
+
+class Deletion(NamedTuple):
+    key: Key
+    existing: Existing
+    existing_extracted: ExtractedExisting
+
+
+class Diff(ABC):
+
+    # Used internally:
+    existing_mapping: Dict[Key, Tuple[Existing, ExtractedExisting]]
+    existing_keys: Set[Key]
+    imported_mapping: Dict[Key, Tuple[Imported, ExtractedImported]]
+    imported_keys: Set[Key]
+
+    # Populated by :meth:`compute`:
+    to_add: List[Addition] = None
+    to_update: List[Update] = None
+    to_delete: List[Deletion] = None
+
+    def __init__(self, existing: Sequence[Existing], imported: Sequence[Existing]):
         self.existing = existing
         self.imported = imported
 
     @abstractmethod
-    def extract_existing(self, obj):
+    def extract_existing(self, obj: Existing) -> Tuple[Key, ExtractedExisting]:
         """
         Must return ``key, obj`` where ``key`` is the key of the existing
         object and ``obj`` is an object that can be compared with
@@ -27,7 +51,7 @@ class Diff(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def extract_imported(self, obj):
+    def extract_imported(self, obj: Imported) -> Tuple[Key, ExtractedImported]:
         """
         Must return ``None`` or ``key, obj`` where ``key`` is the key of the
         imported object and ``obj`` is an object that can be compared with
@@ -37,24 +61,45 @@ class Diff(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def add(self, key, imported, extracted_imported):
+    def add(
+            self,
+            key: Key,
+            imported: Imported,
+            extracted_imported: ExtractedImported
+    ) -> None:
         """
         Handle the addition of an imported object.
         """
 
     @abstractmethod
-    def update(self, key, existing, existing_extracted, imported, imported_extracted):
+    def update(
+            self,
+            key: Key,
+            existing: Existing,
+            existing_extracted: ExtractedExisting,
+            imported: Imported,
+            imported_extracted: ExtractedImported,
+    ) -> None:
         """
         Handle an update of an existing object.
         """
 
     @abstractmethod
-    def delete(self, key, existing, existing_extracted):
+    def delete(
+            self,
+            key: Key,
+            existing: Existing,
+            existing_extracted: ExtractedExisting
+    ) -> None:
         """
         Handle the deletion of an existing object.
         """
 
-    def compute(self):
+    post_add: Callable[[], None] = None
+    post_update: Callable[[], None] = None
+    post_delete: Callable[[], None] = None
+
+    def compute(self) -> None:
         problems = defaultdict(list)
         for name in 'existing', 'imported':
             mapping = {}
@@ -132,7 +177,7 @@ class Diff(metaclass=ABCMeta):
         for key in sorted(self.existing_keys - self.imported_keys):
             self.to_delete.append(Deletion(key, *self.existing_mapping[key]))
 
-    def apply(self):
+    def apply(self) -> None:
         if self.to_add is None:
             self.compute()
         for op in 'delete', 'update', 'add':
