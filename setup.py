@@ -26,7 +26,9 @@ setup(
             'testfixtures',
             'mortar_mixins>=3',
             'mock',
+            'sybil',
         ],
         build=['setuptools-git', 'wheel', 'twine'],
+        docs=['sphinx', 'furo', 'mortar_mixins>=3'],
     ),
 )

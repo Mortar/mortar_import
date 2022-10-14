@@ -34,11 +34,16 @@ common: &common
         requires:
           - run-tests
 
+    - python/pip-docs:
+        name: docs
+        requires:
+          - coverage
+
     - python/release:
         name: release
         config: .carthorse.yml
         requires:
-          - coverage
+          - docs
         filters:
           branches:
             only: master

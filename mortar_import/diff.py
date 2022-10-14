@@ -178,6 +178,11 @@ class Diff(ABC):
             self.to_delete.append(Deletion(key, *self.existing_mapping[key]))
 
     def apply(self) -> None:
+        """
+        :meth:`compute` this :class:`Diff` if it has not already been computed
+        and then apply it by
+        :return:
+        """
         if self.to_add is None:
             self.compute()
         for op in 'delete', 'update', 'add':

@@ -1,35 +1,31 @@
-|CircleCI|_
+mortar_import
+=============
+
+|CircleCI|_ |Docs|_
 
 .. |CircleCI| image:: https://circleci.com/gh/Mortar/mortar_import/tree/master.svg?style=shield
 .. _CircleCI: https://circleci.com/gh/Mortar/mortar_import/tree/master
 
-mortar_import
-=============
+.. |Docs| image:: https://readthedocs.org/projects/mortar-import/badge/?version=latest
+.. _Docs: http://mortar-import.readthedocs.org/en/latest/
 
-Tools for importing data, particularly when using `mortar_mixins`__.
+Tools for finding differences between existing and imported sets of data and then
+applying those differences.
 
-__ https://github.com/Mortar/mortar_mixins
+Quickstart
+----------
 
-Install from PyPI with pip.
+.. hidden-code-block
 
-Development
------------
+  Some Python
 
-Get a clone of the git repo and then do the following::
+.. code-block:: python
 
-  virtualenv .
-  bin/pip install -e .[build,test]
-  
-  sudo -u postgres psql -d postgres -c "create user testuser with password 'testpassword';"
-  sudo -u postgres createdb -O testuser testdb
-  sudo -u postgres psql -d testdb -c "CREATE EXTENSION btree_gist;"
+  from mortar_import import Diff
 
-  export DB_URL=postgres://testuser:testpassword@localhost:5432/testdb
-  bin/pytest --cov
+  class MyDiff(Diff):
+      pass
 
-Releasing
----------
+Full documentation can be found `here`__.
 
-To make a release, just update the version in ``setup.py``
-and push to https://github.com/Mortar/mortar_import
-and Carthorse should take care of the rest.
+__ http://mortar-import.readthedocs.org/en/latest/
