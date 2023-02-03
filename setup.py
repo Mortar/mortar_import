@@ -24,6 +24,7 @@ setup(
             'pytest',
             'pytest-cov',
             'testfixtures',
+            'SQLAlchemy<2',
             'mortar_mixins>=3',
             'mock',
         ],
